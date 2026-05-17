@@ -1,11 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 保持 viewport 设置为 device-width 以适配移动端 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>戳泡泡游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA); /* 天空蓝背景 */
+            font-family: 'Arial', sans-serif;
+            user-select: none; /* 防止双击选中文本 */
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 分数显示 */
+        #score-board {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #333;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 泡泡样式 */
+        .bubble {
+            position: absolute;
+            bottom: -100px; /* 从屏幕底部下方开始 */
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.1));
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            animation: floatUp linear forwards;
+            /* 添加彩虹色边框效果 */
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* 泡泡上浮动画 */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-50vh) translateX(20px); /* 稍微左右摆动 */
+            }
+            100% {
+                transform: translateY(-120vh) translateX(-20px);
+                opacity: 0;
+            }
+        }
+
+        /* 点击破裂效果 */
+        .popped {
+            animation: popAnim 0.2s ease-out forwards !important;
+            pointer-events: none; /* 防止重复点击 */
+        }
+
+        @keyframes popAnim {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    
+
+    <div id="game-container">
+        <div id="score-board">得分: <span id="score">0</span></div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const scoreElement = document.getElementById('score');
+        let score = 0;
+
+        // 创建泡泡函数
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+
+            // 随机大小 (30px - 80px)
+            const size = Math.random() * 50 + 30;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+
+            // 随机水平位置 (0% - 90%)
+            bubble.style.left = `${Math.random() * 90}%`;
+
+            // 随机动画持续时间 (3s - 8s)，速度越慢越难戳
+            const duration = Math.random() * 5 + 3;
+            bubble.style.animationDuration = `${duration}s`;
+
+            // 随机颜色色调 (通过 hue-rotate 滤镜实现多彩泡泡)
+            const hue = Math.random() * 360;
+            bubble.style.filter = `hue-rotate(${hue}deg)`;
+
+            // 点击事件
+            bubble.addEventListener('click', () => popBubble(bubble));
+            // 兼容移动端触摸
+            bubble.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // 防止触发鼠标事件
+                popBubble(bubble);
+            });
+
+            container.appendChild(bubble);
+
+            // 动画结束后移除元素，防止内存泄漏
+            setTimeout(() => {
+                if (bubble.parentNode && !bubble.classList.contains('popped')) {
+                    bubble.remove();
+                }
+            }, duration * 1000);
+        }
+
+        // 戳破泡泡逻辑
+        function popBubble(bubble) {
+            if (bubble.classList.contains('popped')) return;
+
+            bubble.classList.add('popped');
+            
+            // 更新分数
+            score++;
+            scoreElement.textContent = score;
+
+            // 播放破裂动画后移除
+            setTimeout(() => {
+                bubble.remove();
+            }, 200);
+        }
+
+        // 游戏循环：每 500ms 生成一个泡泡
+        setInterval(createBubble, 500);
+
+        // 初始生成几个泡泡
+        for(let i=0; i<5; i++) {
+            setTimeout(createBubble, i * 200);
+        }
+    </script>
 </body>
 </html>
